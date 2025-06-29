@@ -1,9 +1,9 @@
-from flask import Blueprint,Flask, render_template, request, redirect, url_for, session,jsonify
+from flask import Blueprint,Flask, request, session,jsonify
 from models import User
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import create_access_token
 from models import db
-
+from werkzeug.exceptions import BadRequest
 
 auth = Blueprint("auth",__name__)
 bcrypt = Bcrypt()
@@ -24,7 +24,13 @@ def login():
 
 @auth.route("/register",methods = ["GET","POST"])
 def register():
-    data = request.get_json()
+    try:
+        data = request.get_json(force=True)
+    except BadRequest:
+        return jsonify({"message": "Invalid JSON input"}), 400
+
+    if not data:
+        return jsonify({"message": "Empty JSON body"}), 400
     name = data.get("name")
     email = data.get("email")
     password = data.get("password")
